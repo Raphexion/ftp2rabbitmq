@@ -26,9 +26,16 @@ start_link() ->
 %% Supervisor callbacks
 %%====================================================================
 
-%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    FileProducer = #{id => file_producer,
+		     start => {file_producer, start_link, []}},
+
+    Bifrost = #{id => bifrost,
+		start => {bifrost, start_link, [ftp2rabbitmq,
+						[{port, 2121}]]}},
+    Children = [FileProducer, Bifrost],
+
+    {ok, { {one_for_all, 1, 1}, Children} }.
 
 %%====================================================================
 %% Internal functions

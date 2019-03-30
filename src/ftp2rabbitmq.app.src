@@ -5,7 +5,10 @@
   {mod, { ftp2rabbitmq_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    lager,
+    kiks,
+    erlmemfs
    ]},
   {env,[]},
   {modules, []},
