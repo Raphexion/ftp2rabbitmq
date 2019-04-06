@@ -96,11 +96,12 @@ list_files(State, Directory) ->
 % FileRetrievalFun is fun() and returns {ok, Bytes, Count} or done
 put_file(State, Filename, _Mode, FileRetrievalFun) ->
     Writer = fun(_) -> FileRetrievalFun() end,
+    WriteTimeout = 60000,
     case erlmemfs:put_file(fs(State), Filename, <<>>) of
 	{ok, Name} ->
 	    {ok, Fp} = erlmemfs:get_file(fs(State), Name),
 	    {ok, Fd} = erlmemfs_file:open(Fp),
-	    done = erlmemfs_file:write_block(Fp, Fd, Writer),
+	    done = erlmemfs_file:write_block(Fp, Fd, Writer, WriteTimeout),
 	    {ok, State};
 	{error, Reason} ->
 	    {error, State}
@@ -203,7 +204,6 @@ create_next_fun(State, Fp, Fd) ->
 		    erlmemfs_file:close(Fp, Fd),
 		    {done, State};
 		{ok, Bytes} ->
-		    io:fwrite("BYTES: ~p~n", [Bytes]),
 		    {ok, Bytes, create_next_fun(State, Fp, Fd)}
 	    end
     end.

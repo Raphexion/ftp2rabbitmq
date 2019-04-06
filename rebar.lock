@@ -6,7 +6,7 @@
   0},
  {<<"erlmemfs">>,
   {git,"git://github.com/Raphexion/erlmemfs.git",
-       {ref,"a3ca964656443f530e696b074a387e3b5fd92323"}},
+       {ref,"4fcb2d5ead43c6c3fd87f7c1cebb59969a63d876"}},
   0},
  {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},4},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},3},
