@@ -20,14 +20,14 @@
          site_help/1,
          disconnect/1]).
 
--record(state, {fs}).
+-record(state, {fs, mq}).
 
 init(InitialState, _) ->
     InitialState.
 
-login(State, _Username, _Password) ->
+login(State, Username, _Password) ->
     lager:warning("login"),
-    {true, initialize_state(State)}.
+    {true, initialize_state(State, Username)}.
 
 current_directory(State) ->
     lager:warning("current directory"),
@@ -102,6 +102,8 @@ put_file(State, Filename, _Mode, FileRetrievalFun) ->
 	    {ok, Fp} = erlmemfs:get_file(fs(State), Name),
 	    {ok, Fd} = erlmemfs_file:open(Fp),
 	    done = erlmemfs_file:write_block(Fp, Fd, Writer, WriteTimeout),
+	    erlmemfs_file:close(Fp, Fd),
+	    {ok, _f2r} = file2rabbitmq:start_link(Fp, mq(State)),
 	    {ok, State};
 	{error, Reason} ->
 	    {error, State}
@@ -167,12 +169,16 @@ reading_fun(State, Pos, Bytes=[Head|Rest]) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-initialize_state(State) ->
+initialize_state(State, Username) ->
     {ok, Fs} = erlmemfs_sup:create_erlmemfs(),
-    State#connection_state{module_state=#state{fs=Fs}}.
+    {ok, Mq} = kiks_producer_sup:add_child("ftp", Username),
+    State#connection_state{module_state=#state{fs=Fs, mq=Mq}}.
 
 fs(#connection_state{module_state=#state{fs=Fs}}) ->
     Fs.
+
+mq(#connection_state{module_state=#state{mq=Mq}}) ->
+    Mq.
 
 transform_into_file_info(Listing) ->
     transform_into_file_info(Listing, []).
