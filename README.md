@@ -3,6 +3,11 @@ ftp2rabbitmq
 
 Under development. Very unstable.
 
+Design
+------
+
+![Big Picture](doc/big_picture.png)
+
 Gettings started
 ----------------
 
