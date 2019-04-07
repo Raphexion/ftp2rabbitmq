@@ -4,6 +4,21 @@ participant "Ftp Client" as FC
 participant "Ftp Server" as FS
 participant "RabbitMQ broker" as RMQ
 
-FC -> FS:  put_file
-FS -> RMQ: binary data
+FC -> FS: login with username and password
+
+FS -> RMQ: creates exchange named ftp with routing_key <username>
+note right
+     In RabbitMQ, to create an exchange is idempotent.
+end note
+
+FC -> FS: change directory to /a/b/c
+note right
+     Currently ftp2rabbitmq ignores
+     the actual path. That is, there is not special logic
+     that uses the path.
+end note
+
+FC -> FS:  put_file abc.txt with content
+FS -> RMQ: posts raw data <content> to the exchange
+
 @enduml
