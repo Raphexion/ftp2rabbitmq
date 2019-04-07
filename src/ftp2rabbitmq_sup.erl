@@ -33,9 +33,15 @@ init([]) ->
     Bifrost = #{id => bifrost,
 		start => {bifrost, start_link, [ftp2rabbitmq,
 						[{port, 2121}]]}},
-    Children = [FileProducer, Bifrost],
 
-    {ok, { {one_for_all, 1, 1}, Children} }.
+    File2RabbitMqSup = #{id => file2rabbitmq_sup,
+			 start => {file2rabbitmq_sup, start_link, []}},
+
+    Children = [FileProducer,
+		Bifrost,
+		File2RabbitMqSup],
+
+    {ok, {{one_for_all, 1, 1}, Children}}.
 
 %%====================================================================
 %% Internal functions
