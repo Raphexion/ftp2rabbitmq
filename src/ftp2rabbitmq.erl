@@ -44,9 +44,9 @@ make_directory(State, Directory) ->
     end.
 
 change_directory(State, Directory) ->
-    lager:warning("change directory ~p", [Directory]),
+    lager:debug("change directory to ~s", [Directory]),
     case erlmemfs:change_directory(fs(State), Directory) of
-	{ok, Name} ->
+	{ok, _Name} ->
 	    {ok, State};
 	{error, _Why} ->
 	    {error, State}
@@ -57,39 +57,44 @@ disconnect(_) ->
     ok.
 
 remove_file(State, File) ->
+    lager:debug("remove file ~s", [File]),
     case erlmemfs:remove_file(fs(State), File) of
 	{ok, File} ->
 	    {ok, State};
-	{error, Why} ->
+	{error, Reason} ->
+	    lager:warning("remove failed with ~p", [Reason]),
 	    {error, State}
     end.
 
 rename_file(State, From, To) ->
+    lager:debug("rename file from ~s to ~s", [From, To]),
     case  erlmemfs:rename_file(fs(State), From, To) of
-	{ok, Name} ->
+	{ok, _Name} ->
 	    {ok, State};
-	{error, Why} ->
+	{error, Reason} ->
+	    lager:warning("rename failed with ~p", [Reason]),
 	    {error, State}
     end.
 
 remove_directory(State, Directory) ->
+    lager:debug("remove directory ~s", [Directory]),
     case erlmemfs:remove_directory(fs(State), Directory) of
-	{ok, Name} ->
+	{ok, _Name} ->
 	    {ok, State};
 	{error, Reason} ->
+	    lager:warning("remove directory failed with ~p", [Reason]),
 	    {error, Reason}
     end.
 
 list_files(State, "") ->
     list_files(State, ".");
 list_files(State, Directory) ->
-    lager:warning("list files >>~s<<", [Directory]),
+    lager:debug("list files ~s", [Directory]),
     case erlmemfs:list_files(fs(State), Directory) of
 	{ok, Ls} ->
-	    lager:warning("LS: ~p", [Ls]),
 	    transform_into_file_info(Ls);
 	{error, Reason} ->
-	    lager:warning("LS ~p failed with reason ~p", [Directory, Reason]),
+	    lager:warning("ls ~p failed with reason ~p", [Directory, Reason]),
 	    []
     end.
 
@@ -106,6 +111,7 @@ put_file(State, Filename, _Mode, FileRetrievalFun) ->
 	    {ok, _f2r} = file2rabbitmq:start_link(Fp, mq(State)),
 	    {ok, State};
 	{error, Reason} ->
+	    lager:warning("put_file failed with ~p", [Reason]),
 	    {error, State}
     end.
 
@@ -131,37 +137,6 @@ site_command(_, _, _) ->
 
 site_help(_) ->
     {error, not_found}.
-
-% Memory Server-specific Functions
-
-read_from_fun(Fun) ->
-    read_from_fun([], 0, Fun).
-read_from_fun(Buffer, Count, Fun) ->
-    case Fun() of
-        {ok, Bytes, ReadCount} ->
-            read_from_fun(Buffer ++ [Bytes], Count + ReadCount, Fun);
-        done ->
-            {ok, Buffer, Count}
-    end.
-
-reading_fun(State, Bytes) ->
-    reading_fun(State, 0, Bytes).
-reading_fun(State, _, []) ->
-    fun(_) ->
-            {done, State}
-    end;
-reading_fun(State, Pos, Bytes=[Head|Rest]) ->
-    TotalSize = size(Head),
-    RemainingBytes = TotalSize - Pos,
-    if Pos >= TotalSize ->
-            reading_fun(State, 0, Rest);
-       true ->
-            fun(ByteCount) ->
-                    Window = binary:part(Head, Pos, min(RemainingBytes, ByteCount)),
-                    ReadCount = size(Window),
-                    {ok, Window, reading_fun(State, Pos + ReadCount, Bytes)}
-            end
-    end.
 
 %%
 
