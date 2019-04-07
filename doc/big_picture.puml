@@ -1,0 +1,9 @@
+@startuml
+
+participant "Ftp Client" as FC
+participant "Ftp Server" as FS
+participant "RabbitMQ broker" as RMQ
+
+FC -> FS:  put_file
+FS -> RMQ: binary data
+@enduml
