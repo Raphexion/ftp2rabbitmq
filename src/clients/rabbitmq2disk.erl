@@ -3,8 +3,8 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/5,
-	 process/2]).
+-export([start_link/4,
+	 process/3]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -18,25 +18,25 @@
 %% API
 %%------------------------------------------------------------------------------
 
-start_link(Name, Exchange, Queue, RoutingKey, Filename) ->
-    gen_server:start_link(?MODULE, [Name, Exchange, Queue, RoutingKey, Filename], []).
+start_link(Name, Exchange, Queue, RoutingKey) ->
+    gen_server:start_link(?MODULE, [Name, Exchange, Queue, RoutingKey], []).
 
-process(Pid, Payload) ->
-    gen_server:call(Pid, {process, Payload}).
+process(Pid, Payload, Topic) ->
+    gen_server:call(Pid, {process, Payload, Topic}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
 %% @hidden
-init([Name, Exchange, Queue, RoutingKey, Filename]) ->
+init([Name, Exchange, Queue, RoutingKey]) ->
     {ok, _C} = kiks_consumer_sup:add_child(Exchange, Queue, RoutingKey, ?MODULE, self()),
-    {ok, #{name => Name, filename => Filename}}.
+    {ok, #{name => Name}}.
 
 %% @hidden
-handle_call({process, Payload}, _From, State) ->
-    #{name := Name, filename := Filename} = State,
-    Res = priv_process(Name, Payload, Filename),
+handle_call({process, Payload, Topic}, _From, State) ->
+    #{name := Name} = State,
+    Res = priv_process(Name, Payload, Topic),
     {reply, Res, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
@@ -61,6 +61,6 @@ code_change(_OldVsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-priv_process(Name, Payload, _Filename) ->
-    io:fwrite("[~p] accepting ~p~n", [Name, byte_size(Payload)]),
+priv_process(Name, Payload, Topic) ->
+    io:fwrite("[~p] accepting ~p bytes on topic ~p~n", [Name, byte_size(Payload), Topic]),
     ok.

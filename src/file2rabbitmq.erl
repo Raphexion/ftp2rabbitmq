@@ -1,9 +1,13 @@
 -module(file2rabbitmq).
+-include_lib("eunit/include/eunit.hrl").
+
 -behaviour(gen_server).
+
 
 %% Api
 
--export([start_link/2]).
+-export([start_link/5,
+	 topic/3]).
 
 %% Behaviour callbacks
 
@@ -14,10 +18,11 @@
 	 terminate/2,
 	 code_change/3]).
 
-start_link(Fp, Mq) ->
-    gen_server:start_link(?MODULE, #{fp => Fp, mq => Mq}, []).
+start_link(Username, Path, Filename, Fp, Mq) ->
+    Topic = topic(Username, Path, Filename),
+    gen_server:start_link(?MODULE, #{fp => Fp, mq => Mq, topic => Topic}, []).
 
-init(State=#{fp := Fp, mq := Mq}) ->
+init(State=#{fp := _Fp, mq := _Mq, topic := _Topic}) ->
     {ok, State, 0}.
 
 handle_call(What, _From, State) ->
@@ -27,11 +32,12 @@ handle_cast(What, State) ->
     lager:error("unsupported ~p", [What]),
     {noreply, State}.
 
-handle_info(timeout, State=#{fp := Fp, mq := Mq}) ->
+handle_info(timeout, State=#{fp := Fp, mq := Mq, topic := Topic}) ->
     Data = read_data(Fp),
-    kiks_producer:send(Mq, Data),
-    {noreply, State}.
-handle_inf(What, State) ->
+    kiks_producer:send(Mq, Data, Topic),
+    {noreply, State};
+
+handle_info(What, State) ->
     lager:error("unsupported ~p", [What]),
     {noreply, State}.
 
@@ -42,7 +48,9 @@ terminate(Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%%
+%% ---------------------------------------------------------------------
+%% Private
+%% ---------------------------------------------------------------------
 
 read_data(Fp) ->
     {ok, Fd} = erlmemfs_file:open(Fp),
@@ -57,3 +65,31 @@ read_data(Fp, Fd, Acc) ->
 	    Data = erlang:iolist_to_binary([Acc, Block]),
 	    read_data(Fp, Fd, Data)
     end.
+
+safe_filename(Filename) ->
+    [case X of
+	 $. ->
+	     $_;
+	 C ->
+	     C
+     end || X <- Filename].
+
+safe_path(Path) ->
+    Path.
+
+topic(Username, Path, Filename) ->
+    SafePath = safe_path(Path),
+    SafeFilename = safe_filename(Filename),
+    Parts = [Username, SafePath, SafeFilename],
+    Topic = string:join(Parts, "."),
+    Topic.
+
+%% ---------------------------------------------------------------------
+%% Tests
+%% ---------------------------------------------------------------------
+
+safe_filename_test_() ->
+    ?_assert("abc_def_txt" =:= safe_filename("abc.def.txt")).
+
+topic_test_() ->
+    ?_assert("guest.a.b.c.abc_txt" =:= topic("guest", "/a/b/c", "abc.txt")).

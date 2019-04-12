@@ -20,7 +20,7 @@
          site_help/1,
          disconnect/1]).
 
--record(state, {fs, mq}).
+-record(state, {username, fs, mq}).
 
 init(InitialState, _) ->
     InitialState.
@@ -108,7 +108,10 @@ put_file(State, Filename, _Mode, FileRetrievalFun) ->
 	    {ok, Fd} = erlmemfs_file:open(Fp),
 	    done = erlmemfs_file:write_block(Fp, Fd, Writer, WriteTimeout),
 	    erlmemfs_file:close(Fp, Fd),
-	    {ok, _f2r} = file2rabbitmq:start_link(Fp, mq(State)),
+
+	    {ok, Path} = erlmemfs:current_directory(fs(State)),
+	    start_transfer(Path, Filename, Fp, State),
+
 	    {ok, State};
 	{error, Reason} ->
 	    lager:warning("put_file failed with ~p", [Reason]),
@@ -146,14 +149,11 @@ site_help(_) ->
 
 initialize_state(State, Username) ->
     {ok, Fs} = erlmemfs_sup:create_erlmemfs(),
-    {ok, Mq} = kiks_producer_sup:add_child("ftp", Username),
-    State#connection_state{module_state=#state{fs=Fs, mq=Mq}}.
+    {ok, Mq} = kiks_producer_sup:add_child("ftp"),
+    State#connection_state{module_state=#state{username=Username, fs=Fs, mq=Mq}}.
 
 fs(#connection_state{module_state=#state{fs=Fs}}) ->
     Fs.
-
-mq(#connection_state{module_state=#state{mq=Mq}}) ->
-    Mq.
 
 transform_into_file_info(Listing) ->
     transform_into_file_info(Listing, []).
@@ -188,3 +188,7 @@ create_next_fun(State, Fp, Fd) ->
 		    {ok, Bytes, create_next_fun(State, Fp, Fd)}
 	    end
     end.
+
+start_transfer(Path, Filename, Fp, #connection_state{module_state=ModuleState}) ->
+    #state{username=Username, fs=Fs, mq=Mq} = ModuleState,
+    file2rabbitmq:start_link(Username, Path, Filename, Fp, Mq).
