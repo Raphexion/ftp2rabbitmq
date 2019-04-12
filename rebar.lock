@@ -12,7 +12,7 @@
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},3},
  {<<"kiks">>,
   {git,"git://github.com/Raphexion/kiks.git",
-       {ref,"1bf65242ba12a3344aa325a5e90f20caede25624"}},
+       {ref,"6abfd662ac6e2b4aa80bfc2b856fd0157dc98d07"}},
   0},
  {<<"lager">>,{pkg,<<"lager">>,<<"3.6.5">>},3},
  {<<"meck">>,
