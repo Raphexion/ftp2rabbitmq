@@ -27,9 +27,6 @@ start_link() ->
 %%====================================================================
 
 init([]) ->
-    FileProducer = #{id => file_producer,
-		     start => {file_producer, start_link, []}},
-
     Bifrost = #{id => bifrost,
 		start => {bifrost, start_link, [ftp2rabbitmq,
 						[{port, 2121}]]}},
@@ -37,8 +34,7 @@ init([]) ->
     File2RabbitMqSup = #{id => file2rabbitmq_sup,
 			 start => {file2rabbitmq_sup, start_link, []}},
 
-    Children = [FileProducer,
-		Bifrost,
+    Children = [Bifrost,
 		File2RabbitMqSup],
 
     {ok, {{one_for_all, 1, 1}, Children}}.
