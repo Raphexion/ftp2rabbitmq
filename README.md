@@ -28,5 +28,6 @@ Please note that `foobar` must be the same as the username when logging into
 the ftp server.
 
 ```
-rabbitmq2disk:start_link("D1", "ftp", "foobar_queue", "foobar).
+rabbitmq2disk:start_link("D1", "ftp", "ftp_data", "#").
+rabbitmq2disk:start_link("D2", "ftp", "ftp_data", "#").
 ```
