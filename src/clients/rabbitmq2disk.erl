@@ -36,7 +36,7 @@ init([Name, Exchange, Queue, RoutingKey]) ->
 %% @hidden
 handle_call({process, Payload, Topic}, _From, State) ->
     #{name := Name} = State,
-    Res = priv_process(Name, Payload, Topic),
+    Res = client_process(Name, Payload, Topic),
     {reply, Res, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
@@ -61,6 +61,6 @@ code_change(_OldVsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-priv_process(Name, Payload, Topic) ->
+client_process(Name, Payload, Topic) ->
     io:fwrite("[~p] accepting ~p bytes on topic ~p~n", [Name, byte_size(Payload), Topic]),
     ok.
