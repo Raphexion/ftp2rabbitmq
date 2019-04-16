@@ -1,4 +1,4 @@
--module(rabbitmq2disk).
+-module(rabbitmq2debug).
 -behaviour(gen_f2r_client).
 
 %% API
@@ -17,5 +17,5 @@ start_link(Name, Exchange, Queue, RoutingKey) ->
 %%------------------------------------------------------------------------------
 
 client_process(Name, Payload, Topic) ->
-    lager:debug("writes file to disk ~p ~p ~p", [Name, byte_size(Payload), Topic]),
-    file:write_file(Name, Payload).
+    io:fwrite("[~p] accepting ~p bytes on topic ~p~n", [Name, byte_size(Payload), Topic]),
+    ok.
