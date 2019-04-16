@@ -8,7 +8,8 @@
     stdlib,
     lager,
     kiks,
-    erlmemfs
+    erlmemfs,
+    ftp  %% used primarily for testing
    ]},
   {env,[]},
   {modules, []},
