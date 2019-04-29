@@ -6,7 +6,7 @@
 
 %% Api
 
--export([start_link/5,
+-export([start_link/6,
 	 topic/3]).
 
 %% Behaviour callbacks
@@ -18,11 +18,11 @@
 	 terminate/2,
 	 code_change/3]).
 
-start_link(Username, Path, Filename, Fp, Mq) ->
+start_link(Username, Path, Filename, Fp, FtpData, FtpInfo) ->
     Topic = topic(Username, Path, Filename),
-    gen_server:start_link(?MODULE, #{fp => Fp, mq => Mq, topic => Topic}, []).
+    gen_server:start_link(?MODULE, #{fp => Fp, ftpdata => FtpData, ftpinfo => FtpInfo, topic => Topic}, []).
 
-init(State=#{fp := _Fp, mq := _Mq, topic := _Topic}) ->
+init(State=#{fp := _Fp, ftpdata := _FtpData, ftpinfo := _FtpInfo, topic := _Topic}) ->
     {ok, State, 0}.
 
 handle_call(What, _From, State) ->
@@ -32,9 +32,9 @@ handle_cast(What, State) ->
     lager:error("unsupported ~p", [What]),
     {noreply, State}.
 
-handle_info(timeout, State=#{fp := Fp, mq := Mq, topic := Topic}) ->
+handle_info(timeout, State=#{fp := Fp, ftpdata := FtpData, ftpinfo := FtpInfo, topic := Topic}) ->
     Data = read_data(Fp),
-    kiks_producer:send(Mq, Data, Topic),
+    kiks_producer:send(FtpData, Data, Topic),
     {noreply, State};
 
 handle_info(What, State) ->

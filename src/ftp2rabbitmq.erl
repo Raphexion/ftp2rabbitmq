@@ -20,7 +20,12 @@
          site_help/1,
          disconnect/1]).
 
--record(state, {username, fs, mq}).
+-record(state, {
+	  username,
+	  fs,
+	  ftpdata,
+	  ftpinfo
+	 }).
 
 init(InitialState, _) ->
     InitialState.
@@ -149,8 +154,9 @@ site_help(_) ->
 
 initialize_state(State, Username) ->
     {ok, Fs} = erlmemfs_sup:create_erlmemfs(),
-    {ok, Mq} = kiks_producer_sup:add_child("ftp"),
-    State#connection_state{module_state=#state{username=Username, fs=Fs, mq=Mq}}.
+    {ok, FtpData} = kiks_producer_sup:add_child("ftpdata"),
+    {ok, FtpInfo} = kiks_producer_sup:add_child("ftpinfo"),
+    State#connection_state{module_state=#state{username=Username, fs=Fs, ftpdata=FtpData, ftpinfo=FtpInfo}}.
 
 fs(#connection_state{module_state=#state{fs=Fs}}) ->
     Fs.
@@ -190,5 +196,10 @@ create_next_fun(State, Fp, Fd) ->
     end.
 
 start_transfer(Path, Filename, Fp, #connection_state{module_state=ModuleState}) ->
-    #state{username=Username, fs=Fs, mq=Mq} = ModuleState,
-    file2rabbitmq:start_link(Username, Path, Filename, Fp, Mq).
+    #state{
+       username=Username,
+       fs=Fs,
+       ftpdata=FtpData,
+       ftpinfo=FtpInfo
+      } = ModuleState,
+    file2rabbitmq:start_link(Username, Path, Filename, Fp, FtpData, FtpInfo).
