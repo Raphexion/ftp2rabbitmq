@@ -26,16 +26,16 @@ init(InitialState, _) ->
     InitialState.
 
 login(State, Username, _Password) ->
-    lager:warning("login"),
+    lager:debug("login"),
     {true, initialize_state(State, Username)}.
 
 current_directory(State) ->
-    lager:warning("current directory"),
+    lager:debug("current directory"),
     {ok, CWD} = erlmemfs:current_directory(fs(State)),
     CWD.
 
 make_directory(State, Directory) ->
-    lager:warning("make directory ~p", [Directory]),
+    lager:debug("make directory ~p", [Directory]),
     case erlmemfs:make_directory(fs(State), Directory) of
 	{ok, _} ->
 	    {ok, State};
@@ -53,7 +53,7 @@ change_directory(State, Directory) ->
     end.
 
 disconnect(_) ->
-    lager:warning("disconnect"),
+    lager:debug("disconnect"),
     ok.
 
 remove_file(State, File) ->
