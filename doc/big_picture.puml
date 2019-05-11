@@ -21,7 +21,7 @@ FS -> RMQ: create Data Exchange
 DE <- RMQ: create
 
 FS -> RMQ: create Info Exchange
-DE <- RMQ: create
+IE <- RMQ: create
 
 == Repetition ==
 
