@@ -28,6 +28,16 @@ Please note that `foobar` must be the same as the username when logging into
 the ftp server.
 
 ```
-rabbitmq2disk:start_link("D1", "ftp", "ftp_data1", "#").
-rabbitmq2disk:start_link("D2", "ftp", "ftp_data2", "#").
+rabbitmq2debug:start_link("data", "ftpdata", "ftp_data1", "#").
+rabbitmq2debug:start_link("info", "ftpinfo", "ftp_info1", "#").
+```
+
+Configure RabbitMQ broker
+-------------------------
+
+```
+export rabbitmq_username="guest"
+export rabbitmq_password="guest"
+export rabbitmq_hostname="localhost"
+export rabbitmq_port="5672"
 ```

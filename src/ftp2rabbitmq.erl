@@ -20,22 +20,27 @@
          site_help/1,
          disconnect/1]).
 
--record(state, {username, fs, mq}).
+-record(state, {
+	  username,
+	  fs,
+	  ftpdata,
+	  ftpinfo
+	 }).
 
 init(InitialState, _) ->
     InitialState.
 
 login(State, Username, _Password) ->
-    lager:warning("login"),
+    lager:debug("login"),
     {true, initialize_state(State, Username)}.
 
 current_directory(State) ->
-    lager:warning("current directory"),
+    lager:debug("current directory"),
     {ok, CWD} = erlmemfs:current_directory(fs(State)),
     CWD.
 
 make_directory(State, Directory) ->
-    lager:warning("make directory ~p", [Directory]),
+    lager:debug("make directory ~p", [Directory]),
     case erlmemfs:make_directory(fs(State), Directory) of
 	{ok, _} ->
 	    {ok, State};
@@ -53,7 +58,7 @@ change_directory(State, Directory) ->
     end.
 
 disconnect(_) ->
-    lager:warning("disconnect"),
+    lager:debug("disconnect"),
     ok.
 
 remove_file(State, File) ->
@@ -149,8 +154,9 @@ site_help(_) ->
 
 initialize_state(State, Username) ->
     {ok, Fs} = erlmemfs_sup:create_erlmemfs(),
-    {ok, Mq} = kiks_producer_sup:add_child("ftp"),
-    State#connection_state{module_state=#state{username=Username, fs=Fs, mq=Mq}}.
+    {ok, FtpData} = kiks_producer_sup:add_child("ftpdata"),
+    {ok, FtpInfo} = kiks_producer_sup:add_child("ftpinfo"),
+    State#connection_state{module_state=#state{username=Username, fs=Fs, ftpdata=FtpData, ftpinfo=FtpInfo}}.
 
 fs(#connection_state{module_state=#state{fs=Fs}}) ->
     Fs.
@@ -190,5 +196,10 @@ create_next_fun(State, Fp, Fd) ->
     end.
 
 start_transfer(Path, Filename, Fp, #connection_state{module_state=ModuleState}) ->
-    #state{username=Username, fs=Fs, mq=Mq} = ModuleState,
-    file2rabbitmq:start_link(Username, Path, Filename, Fp, Mq).
+    #state{
+       username=Username,
+       fs=Fs,
+       ftpdata=FtpData,
+       ftpinfo=FtpInfo
+      } = ModuleState,
+    file2rabbitmq:start_link(Username, Path, Filename, Fp, FtpData, FtpInfo).
