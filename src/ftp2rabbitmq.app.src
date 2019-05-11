@@ -1,5 +1,7 @@
+%% -*- mode: erlang -*-
+
 {application, ftp2rabbitmq,
- [{description, "An OTP application"},
+ [{description, "An in-memory ftp server that pushes files to RabbitMQ"},
   {vsn, "0.2.0"},
   {registered, []},
   {mod, { ftp2rabbitmq_app, []}},
@@ -14,7 +16,7 @@
   {env,[]},
   {modules, []},
 
-  {maintainers, []},
+  {maintainers, ["Niklas Johansson (raphexion@gmail.com)"]},
   {licenses, ["Apache 2.0"]},
-  {links, []}
+  {links, [{"Github", "https://github.com/Raphexion/ftp2rabbitmq"}]}
  ]}.
