@@ -1,24 +1,41 @@
 @startuml
 
-participant "Ftp Client" as FC
-participant "Ftp Server" as FS
-participant "RabbitMQ broker" as RMQ
+skinparam ParticipantPadding 20
+skinparam BoxPadding 50
+
+box "External"
+    participant "Ftp Client" as FC
+end box
+box "FTP 2 RabbitMQ"
+    participant "Ftp Server" as FS
+end box
+box "RabbitMQ"
+    participant "RabbitMQ broker" as RMQ
+    participant "Data Exchange" as DE
+    participant "Info Exchange" as IE
+end box
+
+== Initialization ==
+
+FS -> RMQ: create Data Exchange
+DE <- RMQ: create
+
+FS -> RMQ: create Info Exchange
+DE <- RMQ: create
+
+== Repetition ==
 
 FC -> FS: login with username and password
-
-FS -> RMQ: creates exchange named ftp with routing_key <username>
-note right
-     In RabbitMQ, to create an exchange is idempotent.
-end note
+FC <- FS: ok
 
 FC -> FS: change directory to /a/b/c
-note right
-     Currently ftp2rabbitmq ignores
-     the actual path. That is, there is not special logic
-     that uses the path.
-end note
+FC <- FS: ok
 
-FC -> FS:  put_file abc.txt with content
-FS -> RMQ: posts raw data <content> to the exchange
+FC -> FS: put_file abc.txt with content
+FC <- FS: ok
+
+FS -> DE: posts raw data <content>
+
+FS -> IE: post info about content (filename, dir, hash)
 
 @enduml
