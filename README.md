@@ -31,3 +31,13 @@ the ftp server.
 rabbitmq2debug:start_link("data", "ftpdata", "ftp_data1", "#").
 rabbitmq2debug:start_link("info", "ftpinfo", "ftp_info1", "#").
 ```
+
+Configure RabbitMQ broker
+-------------------------
+
+```
+export rabbitmq_username="guest"
+export rabbitmq_password="guest"
+export rabbitmq_hostname="localhost"
+export rabbitmq_port="5672"
+```
