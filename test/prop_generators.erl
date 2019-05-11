@@ -5,7 +5,8 @@
 	 content/0,
 	 folder/0,
 	 folders/0,
-	 unique_folder_and_file/0]).
+	 unique_folder_and_file/0,
+	 username/0]).
 
 ftp_safe_char() ->
     range(48, 127).
@@ -30,3 +31,6 @@ invalid(Folder) ->
 
 unique_folder_and_file() ->
     ?SUCHTHAT({Folder, File}, {folder(), file()}, Folder /= File).
+
+username() ->
+    non_empty(list(range($A, $Z))).
