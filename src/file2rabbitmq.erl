@@ -6,8 +6,7 @@
 
 %% Api
 
--export([start_link/6,
-	 topic/3]).
+-export([start_link/6]).
 
 %% Behaviour callbacks
 
@@ -19,10 +18,9 @@
 	 code_change/3]).
 
 start_link(Username, Path, Filename, Fp, FtpData, FtpInfo) ->
-    Topic = topic(Username, Path, Filename),
-    gen_server:start_link(?MODULE, #{fp => Fp, ftpdata => FtpData, ftpinfo => FtpInfo, topic => Topic}, []).
+    gen_server:start_link(?MODULE, {Username, Path, Filename, Fp, FtpData, FtpInfo}, []).
 
-init(State=#{fp := _Fp, ftpdata := _FtpData, ftpinfo := _FtpInfo, topic := _Topic}) ->
+init(State={Username, Path, Filename, Fp, FtpData, FtpInfo}) ->
     {ok, State, 0}.
 
 handle_call(What, _From, State) ->
@@ -32,9 +30,9 @@ handle_cast(What, State) ->
     lager:error("unsupported ~p", [What]),
     {noreply, State}.
 
-handle_info(timeout, State=#{fp := Fp, ftpdata := FtpData, ftpinfo := FtpInfo, topic := Topic}) ->
-    Data = read_data(Fp),
-    kiks_producer:send(FtpData, Data, Topic),
+handle_info(timeout, State) ->
+    send_data(State),
+    send_info(State),
     {noreply, State};
 
 handle_info(What, State) ->
@@ -42,7 +40,7 @@ handle_info(What, State) ->
     {noreply, State}.
 
 terminate(Reason, _State) ->
-    lager:debug("terminate with ~p", [Reason]),
+    lager:warning("terminate with ~p", [Reason]),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -51,6 +49,20 @@ code_change(_OldVsn, State, _Extra) ->
 %% ---------------------------------------------------------------------
 %% Private
 %% ---------------------------------------------------------------------
+
+send_data({Username, Path, Filename, Fp, FtpData, FtpInfo}) ->
+    Topic = Username,
+    Data = read_data(Fp),
+    kiks_producer:send(FtpData, Data, Topic).
+
+send_info({Username, Path, Filename, Fp, FtpData, FtpInfo}) ->
+    Topic = Username,
+    {ok, Hash} = erlmemfs_file:hash(Fp),
+    Info = jiffy:encode(#{username => Username,
+			  path => Path,
+			  filename => Filename,
+			  hash => Hash}),
+    kiks_producer:send(FtpInfo, Info, Topic).
 
 read_data(Fp) ->
     {ok, Fd} = erlmemfs_file:open(Fp),
@@ -65,31 +77,3 @@ read_data(Fp, Fd, Acc) ->
 	    Data = erlang:iolist_to_binary([Acc, Block]),
 	    read_data(Fp, Fd, Data)
     end.
-
-safe_filename(Filename) ->
-    [case X of
-	 $. ->
-	     $_;
-	 C ->
-	     C
-     end || X <- Filename].
-
-safe_path(Path) ->
-    Path.
-
-topic(Username, Path, Filename) ->
-    SafePath = safe_path(Path),
-    SafeFilename = safe_filename(Filename),
-    Parts = [Username, SafePath, SafeFilename],
-    Topic = string:join(Parts, "."),
-    Topic.
-
-%% ---------------------------------------------------------------------
-%% Tests
-%% ---------------------------------------------------------------------
-
-safe_filename_test_() ->
-    ?_assert("abc_def_txt" =:= safe_filename("abc.def.txt")).
-
-topic_test_() ->
-    ?_assert("guest.a.b.c.abc_txt" =:= topic("guest", "/a/b/c", "abc.txt")).
