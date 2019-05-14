@@ -4,14 +4,15 @@
  [{description, "An in-memory ftp server that pushes files to RabbitMQ"},
   {vsn, "0.2.0"},
   {registered, []},
-  {mod, { ftp2rabbitmq_app, []}},
+  {mod, {ftp2rabbitmq_app, []}},
   {applications,
    [kernel,
     stdlib,
+    sasl,
     lager,
     kiks,
-    erlmemfs,
-    ftp  %% used primarily for testing
+    jiffy,
+    erlmemfs
    ]},
   {env,[]},
   {modules, []},
