@@ -9,10 +9,10 @@ RUN rebar3 tar
 
 FROM erlang
 
-ENV rabbitmq_username guest
-ENV rabbitmq_password guest
-ENV rabbitmq_hostname localhost
-ENV rabbitmq_port     5672
+ENV rabbitmq_username=guest
+ENV rabbitmq_password=guest
+ENV rabbitmq_hostname=localhost
+ENV rabbitmq_port=5672
 
 WORKDIR /app
 
