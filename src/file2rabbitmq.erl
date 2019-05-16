@@ -20,7 +20,7 @@
 start_link(Username, Path, Filename, Fp, FtpData, FtpInfo) ->
     gen_server:start_link(?MODULE, {Username, Path, Filename, Fp, FtpData, FtpInfo}, []).
 
-init(State={Username, Path, Filename, Fp, FtpData, FtpInfo}) ->
+init(State={_Username, _Path, _Filename, _Fp, _FtpData, _FtpInfo}) ->
     {ok, State, 0}.
 
 handle_call(What, _From, State) ->
@@ -50,12 +50,12 @@ code_change(_OldVsn, State, _Extra) ->
 %% Private
 %% ---------------------------------------------------------------------
 
-send_data({Username, Path, Filename, Fp, FtpData, FtpInfo}) ->
+send_data({Username, _Path, _Filename, Fp, FtpData, _FtpInfo}) ->
     Topic = Username,
     Data = read_data(Fp),
     kiks_producer:send(FtpData, Data, Topic).
 
-send_info({Username, Path, Filename, Fp, FtpData, FtpInfo}) ->
+send_info({Username, Path, Filename, Fp, _FtpData, FtpInfo}) ->
     Topic = Username,
     {ok, Hash} = erlmemfs_file:hash(Fp),
     Info = jiffy:encode(#{username => Username,
