@@ -1,8 +1,6 @@
 ftp2rabbitmq
 ============
 
-Under development. Very unstable.
-
 Design
 ------
 
