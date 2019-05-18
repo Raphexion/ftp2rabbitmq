@@ -14,10 +14,17 @@ Gettings started
 Start RabbitMQ
 
 ```
-docker run -d --rm -p 5672:5672 -p 15672:15672 rabbitmq:3.7-management
+docker run -d --rm -p 5672:5672 -p 15672:15672 --name mq rabbitmq:3.7-management
 ```
 
 Start application
+
+```
+docker run -dit -p 2121:2121 --link mq -e rabbitmq_hostname=mq raphexion/ftp2rabbitmq
+```
+
+Development
+-----------
 
 ```
 rebar3 shell
