@@ -16,6 +16,6 @@ start_link(Name, Exchange, Queue, RoutingKey) ->
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
-client_process(Name, Payload, Topic) ->
-    lager:debug("writes file to disk ~p ~p ~p", [Name, byte_size(Payload), Topic]),
+client_process(Name, Payload, Key) ->
+    lager:debug("writes file to disk ~p ~p ~p ~p", [Name, byte_size(Payload), Key]),
     file:write_file(Name, Payload).

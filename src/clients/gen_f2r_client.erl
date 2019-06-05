@@ -4,7 +4,7 @@
 
 %% API
 -export([start_link/5,
-	 process/3]).
+	 process/4]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -14,7 +14,7 @@
 	 terminate/2,
 	 code_change/3]).
 
-%% Name, Payload, Topic
+%% Name, Payload, Topic, Key
 -callback client_process(any(), any(), any()) -> any().
 
 %%------------------------------------------------------------------------------
@@ -24,8 +24,8 @@
 start_link(Module, Name, Exchange, Queue, RoutingKey) ->
     gen_server:start_link(?MODULE, [Module, Name, Exchange, Queue, RoutingKey], []).
 
-process(Pid, Payload, Topic) ->
-    gen_server:call(Pid, {process, Payload, Topic}).
+process(_Tag, Pid, Payload, Key) ->
+    gen_server:call(Pid, {process, Payload, Key}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
@@ -37,9 +37,9 @@ init([Module, Name, Exchange, Queue, RoutingKey]) ->
     {ok, #{name => Name, module => Module}}.
 
 %% @hidden
-handle_call({process, Payload, Topic}, _From, State) ->
+handle_call({process, Payload, Key}, _From, State) ->
     #{name := Name, module := Mod} = State,
-    Res = Mod:client_process(Name, Payload, Topic),
+    Res = Mod:client_process(Name, Payload, Key),
     {reply, Res, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.

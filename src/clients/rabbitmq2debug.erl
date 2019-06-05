@@ -16,6 +16,6 @@ start_link(Name, Exchange, Queue, RoutingKey) ->
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
-client_process(Name, Payload, Topic) ->
-    io:fwrite("[~p] accepting ~p bytes on topic ~p~n", [Name, byte_size(Payload), Topic]),
+client_process(Name, Payload, Key) ->
+    io:fwrite("[~p] accepting ~p bytes on topic ~p~n", [Name, byte_size(Payload), Key]),
     ok.
